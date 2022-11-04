@@ -1,51 +1,62 @@
 import org.junit.*;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import page_object.MainPage;
 
-import java.util.ArrayList;
-import java.util.List;
 
+@RunWith(Parameterized.class)
 public class CheckImportantQuestionTest {
 
-    private WebDriver driver;
-    private final List<String> actualImportantResponses = new ArrayList<>();
+    public static final String ACCORDION_HEADING = ".//div[@aria-labelledby='accordion__heading-";
+    private static WebDriver driver;
+    private final int indexFAQ;
+    private final String response;
+    private static MainPage mainPage;
 
-    @Before
-    public void setData() {
-        actualImportantResponses.add("Сутки — 400 рублей. Оплата курьеру — наличными или картой.");
-        actualImportantResponses.add("Пока что у нас так: один заказ — один самокат. Если хотите покататься с друзьями, можете просто сделать несколько заказов — один за другим.");
-        actualImportantResponses.add("Допустим, вы оформляете заказ на 8 мая. Мы привозим самокат 8 мая в течение дня. Отсчёт времени аренды начинается с момента, когда вы оплатите заказ курьеру. Если мы привезли самокат 8 мая в 20:30, суточная аренда закончится 9 мая в 20:30.");
-        actualImportantResponses.add("Только начиная с завтрашнего дня. Но скоро станем расторопнее.");
-        actualImportantResponses.add("Пока что нет! Но если что-то срочное — всегда можно позвонить в поддержку по красивому номеру 1010.");
-        actualImportantResponses.add("Самокат приезжает к вам с полной зарядкой. Этого хватает на восемь суток — даже если будете кататься без передышек и во сне. Зарядка не понадобится.");
-        actualImportantResponses.add("Да, пока самокат не привезли. Штрафа не будет, объяснительной записки тоже не попросим. Все же свои.");
-        actualImportantResponses.add("Да, обязательно. Всем самокатов! И Москве, и Московской области.");
+    public CheckImportantQuestionTest(int indexFAQ, String response) {
+        this.indexFAQ = indexFAQ;
+        this.response = response;
+    }
+
+    @Parameterized.Parameters
+    public static Object[][] getTestData() {
+        return new Object[][] {
+                {0, "Сутки — 400 рублей. Оплата курьеру — наличными или картой."},
+                {1, "Пока что у нас так: один заказ — один самокат. Если хотите покататься с друзьями, можете просто сделать несколько заказов — один за другим."},
+                {2, "Допустим, вы оформляете заказ на 8 мая. Мы привозим самокат 8 мая в течение дня. Отсчёт времени аренды начинается с момента, когда вы оплатите заказ курьеру. Если мы привезли самокат 8 мая в 20:30, суточная аренда закончится 9 мая в 20:30."},
+                {3, "Только начиная с завтрашнего дня. Но скоро станем расторопнее."},
+                {4, "Пока что нет! Но если что-то срочное — всегда можно позвонить в поддержку по красивому номеру 1010."},
+                {5, "Самокат приезжает к вам с полной зарядкой. Этого хватает на восемь суток — даже если будете кататься без передышек и во сне. Зарядка не понадобится."},
+                {6, "Да, пока самокат не привезли. Штрафа не будет, объяснительной записки тоже не попросим. Все же свои."},
+                {7, "Да, обязательно. Всем самокатов! И Москве, и Московской области."}
+        };
+    }
+
+    @BeforeClass
+    public static void setup() {
+        driver = new ChromeDriver();
+        driver.get("https://qa-scooter.praktikum-services.ru/");
+        mainPage = new MainPage(driver);
+        mainPage.waitForLoadMainPage();
     }
 
     @Test
     public void checkImportantQuestion() {
-        driver = new ChromeDriver();
-        driver.get("https://qa-scooter.praktikum-services.ru/");
-
-        MainPage mainPage = new MainPage(driver);
-        mainPage.waitForLoadMainPage();
-
         JavascriptExecutor js = (JavascriptExecutor) driver;
         js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
-        int count = mainPage.countNumberOfResponses();
-        for (int i = 0; i < count; i++) {
-            String result = mainPage.clickImportantQuestion(i);
-            Assert.assertTrue(driver.findElement(By.xpath(result)).isDisplayed());
-            Assert.assertEquals(driver.findElement(By.xpath(result + "//p")).getAttribute("textContent"), actualImportantResponses.get(i));
-        }
+        mainPage.clickImportantQuestion(indexFAQ);
+        String xpathAccordionHeading = ACCORDION_HEADING + indexFAQ + "']";
+        Assert.assertTrue(driver.findElement(By.xpath(xpathAccordionHeading)).isDisplayed());
+        Assert.assertEquals(driver.findElement(By.xpath(xpathAccordionHeading + "//p")).getAttribute("textContent"), response);
     }
 
-    @After
-    public void tearDown() {
+    @AfterClass
+    public static void tearDown() {
         driver.quit();
     }
 }

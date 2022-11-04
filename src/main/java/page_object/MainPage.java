@@ -12,9 +12,6 @@ public class MainPage {
 
     private final WebDriver driver;
 
-    // локатор поля с вопросом
-    private final By importantQuestion = By.xpath(".//div[@data-accordion-component='AccordionItemButton']");
-
     // локатор кнопки "Заказать" в шапке страницы
     private final By orderButton = By.xpath(".//button[text() = 'Заказать']");
 
@@ -27,10 +24,6 @@ public class MainPage {
 
     public void waitForLoadMainPage() {
         new WebDriverWait(driver, Duration.ofSeconds(10)).until(driver -> (driver.findElement(imageScooter).isDisplayed()));
-    }
-
-    public int countNumberOfResponses() {
-        return driver.findElements(importantQuestion).size();
     }
 
     public void clickOrder(int indexButton) {
@@ -47,12 +40,10 @@ public class MainPage {
         }
     }
 
-    public String clickImportantQuestion(int responseNumber) {
-        WebElement element = driver.findElement(By.id("accordion__heading-" + responseNumber));
+    public void clickImportantQuestion(int indexFAQ) {
+        WebElement element = driver.findElement(By.id("accordion__heading-" + indexFAQ));
         JavascriptExecutor js = (JavascriptExecutor) driver;
         js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
         element.click();
-
-        return ".//div[@aria-labelledby='" + element.getAttribute("id") + "']";
     }
 }
